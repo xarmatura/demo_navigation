@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:demo_navigation/interal/internal.dart';
 import 'package:demo_navigation/interal/settings/settings.dart';
 import 'package:demo_navigation/pairing/devices.dart';
@@ -7,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/internal_bloc.dart';
+import '../bloc/nested_bloc.dart';
 import '../bloc/pairing_bloc.dart';
 import '../interal/programs/cycles/programs.dart';
+import '../interal/settings/format.dart';
 import '../pairing/pairing.dart';
 import '../pairing/search.dart';
 import '../splash.dart';
@@ -100,17 +101,31 @@ class MyPage<T extends Object?, R extends Object?> {
   static MyPage available = MyPage._(
     'available',
     '${pairing.path}/available',
-        (_) => const Available(),
+    (_) => const Available(),
   );
 
   static MyPage internal = MyPage._(
     'internal',
     '/internal',
     (_) {
-      return BlocProvider<InternalBloc>(
-        create: (_) => InternalBloc(),
+      return MultiBlocProvider(
+        providers: [
+          BlocProvider<InternalBloc>(
+            create: (_) => InternalBloc(),
+          ),
+          // BlocProvider<NestedBloc>(
+          //   create: (BuildContext context) => NestedBloc(),
+          // ),
+          // BlocProvider<BlocC>(
+          //   create: (BuildContext context) => BlocC(),
+          // ),
+        ],
         child: const Internal(),
       );
+      // return BlocProvider<InternalBloc>(
+      //   create: (_) => InternalBloc(),
+      //   child: const Internal(),
+      // );
     },
   );
 
@@ -120,10 +135,44 @@ class MyPage<T extends Object?, R extends Object?> {
     (_) => const Programs(),
   );
 
+  static NestedBloc? nestedBloc;
+
   static MyPage settings = MyPage._(
     'settings',
     '${internal.path}/${programs.path}/settings',
-    (_) => const Settings(),
+    (_) => BlocProvider<NestedBloc>(
+      create: (_) {
+        return nestedBloc ??= NestedBloc();
+      },
+      child: const Settings(),
+    ),
+  );
+
+  // static MyPage settings2 = MyPage._(
+  //   'settings',
+  //   '${internal.path}/${programs.path}/settings',
+  //   (_) => const Settings(),
+  // );
+  //
+  // static MyPage format2 = MyPage._(
+  //   'format',
+  //   '${internal.path}/${programs.path}/${settings.path}/format',
+  //   (_) {
+  //     return const Format();
+  //   },
+  // );
+
+  static MyPage format = MyPage._(
+    'format',
+    '${internal.path}/${programs.path}/${settings.path}/format',
+    (_) {
+      final bloc = nestedBloc;
+
+      if (bloc == null) {
+        throw TypeError();
+      }
+      return BlocProvider.value(value: bloc, child: const Format());
+    },
   );
 
   MyPage<T, R> updateParams(T params) {

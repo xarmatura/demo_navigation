@@ -1,5 +1,4 @@
 import 'package:demo_navigation/navigation/components/internal_router.dart';
-import 'package:flutter/foundation.dart';
 
 import 'components/app_router.dart';
 import 'components/pairing_router.dart';
